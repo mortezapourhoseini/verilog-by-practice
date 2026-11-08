@@ -1,0 +1,39 @@
+name: ci
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  simulate:
+    name: Simulate all examples and solutions (Icarus Verilog)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Install Icarus Verilog
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq iverilog
+
+      - name: Show tool version
+        run: iverilog -V 2>&1 | head -n 1
+
+      - name: Run all tests
+        run: ./scripts/run_all.sh
+
+  lint:
+    name: Optional lint and synthesis (Verilator, Yosys)
+    runs-on: ubuntu-latest
+    # This job gives extra information. It never blocks a merge.
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Install Verilator and Yosys
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq verilator yosys
+
+      - name: Lint and synthesize design files
+        run: ./scripts/lint_all.sh

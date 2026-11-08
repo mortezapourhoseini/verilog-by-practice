@@ -1,0 +1,28 @@
+# Simulation outputs
+*.vcd
+*.fst
+*.lxt
+*.lxt2
+*.vvp
+a.out
+
+# Files written by testbenches (file I/O examples)
+*_out.txt
+
+# Build directory used by the scripts
+build/
+
+# Verilator and Yosys outputs
+obj_dir/
+*.json
+*.blif
+
+# GTKWave save files (keep your own if you want: git add -f)
+*.gtkw
+
+# Editors and OS
+.vscode/
+.idea/
+*.swp
+*~
+.DS_Store
