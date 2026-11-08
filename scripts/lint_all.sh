@@ -23,16 +23,18 @@ if [ $have_verilator -eq 0 ] && [ $have_yosys -eq 0 ]; then
   exit 0
 fi
 
-# check NAME FILE...  (design files only, no testbench)
+# check NAME WORKDIR FILE...  (design files only, no testbench)
+# WORKDIR is where the tools run, so $readmemh finds its data files.
 check() {
   local name="$1"
-  shift
+  local workdir="$2"
+  shift 2
   local files="$*"
   [ -z "$files" ] && return
 
   if [ $have_verilator -eq 1 ]; then
     # shellcheck disable=SC2086
-    if ! verilator --lint-only -Wall -Wno-fatal -Wno-DECLFILENAME -Wno-MULTITOP $files; then
+    if ! (cd "$workdir" && verilator --lint-only -Wall -Wno-fatal -Wno-DECLFILENAME -Wno-MULTITOP $files); then
       echo "ERROR verilator: $name"
       errors=$((errors + 1))
     fi
@@ -41,7 +43,7 @@ check() {
   if [ $have_yosys -eq 1 ]; then
     # No -top: every module in the files is synthesized, so a buggy module
     # next to a good one (as in the pitfalls examples) is checked too.
-    if yosys -p "read_verilog $files; synth; stat" > /tmp/yosys.log 2>&1; then
+    if (cd "$workdir" && yosys -p "read_verilog $files; synth; stat") > /tmp/yosys.log 2>&1; then
       echo "SYNTH $name: $(awk '/^=== /{m=$2} /Number of cells:/{if (!(m in seen)) printf "%s=%s ", m, $NF; seen[m]=1}' /tmp/yosys.log)"
       grep 'Latch inferred' /tmp/yosys.log | grep -v '^No latch' | sed 's/ from process.*//; s/^/      /'
     else
@@ -60,7 +62,7 @@ while IFS= read -r tb; do
   dir="$(dirname "$tb")"
   name="${dir#"$ROOT"/}"
   if [ -f "$dir/SIM_ONLY" ]; then echo "SKIP  $name (SIM_ONLY)"; continue; fi
-  check "$name" $(design_files "$dir")
+  check "$name" "$dir" $(design_files "$dir")
 done < <(find "$ROOT/examples" -name 'tb_*.v' | sort)
 
 # Solutions: the solution files plus helper files from exercises/
@@ -74,7 +76,7 @@ while IFS= read -r sdir; do
     [ -e "$sdir/$(basename "$f")" ] || files="$files $f"
   done
   # shellcheck disable=SC2086
-  check "solutions/$rel" $files
+  check "solutions/$rel" "$edir" $files
 done < <(find "$ROOT/solutions" -mindepth 2 -maxdepth 2 -type d | sort)
 
 echo
