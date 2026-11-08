@@ -332,7 +332,12 @@ assign cout = sum[8];   // sum has no bit 8
 ```
 
 Why: `sum` is 8 bits, so the 9th bit of `a + b` is thrown away. `sum[8]` is
-outside the vector. Icarus only warns, and `cout` is always `x`.
+outside the vector. Icarus only warns, and `cout` is always `x`:
+
+```text
+warning: Constant bit select [8] is after vector sum[7:0].
+       : Replacing select with a constant 1'bx.
+```
 
 Fix: let one assignment produce both parts:
 
