@@ -1,0 +1,15 @@
+// vectors.txt - test vectors for abs_diff, one test per line.
+// Format: a b expected   (all in hex)
+// The testbench skips lines that start with "//".
+// Such files are often written by a script (Python, MATLAB) that
+// contains the "golden" reference model.
+00 00 00
+05 03 02
+03 05 02
+ff 00 ff
+00 ff ff
+80 7f 01
+7f 80 01
+c8 64 64
+64 c8 64
+aa 55 55
