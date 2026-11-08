@@ -21,6 +21,6 @@ make run DIR=examples/01-modules-and-ports/ripple-adder4
   Try this: in instance `fa0`, change `.cout(c[1])` to `.cout(c1)` (a typo).
   Compile again. You get an error, because `c1` was never declared.
   Now also remove the `` `default_nettype none `` line and compile again.
-  This time there is no error: Verilog creates a new 1-bit wire `c1`, and
-  `c[1]` is never driven. The testbench fails, and you must hunt for the bug.
+  This time there is no error, only a warning (`implicit definition of wire 'c1'`):
+  Verilog creates a new 1-bit wire `c1`, and `c[1]` is never driven. The testbench fails, and you must hunt for the bug.
 - In chapter 07 the four instance lines become one `generate` loop.

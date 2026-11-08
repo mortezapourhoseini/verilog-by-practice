@@ -266,7 +266,8 @@ Notes:
 By default, if you use a name that you never declared in a port connection,
 Verilog quietly creates a new 1-bit `wire` with that name. This is called an
 **implicit net**. A typo then becomes a new, unconnected wire, and there is no
-error. The directive `` `default_nettype none `` turns this off: undeclared
+error. (Icarus 12 prints a warning with `-Wall`, but warnings are easy to miss
+and other tools may stay silent.) The directive `` `default_nettype none `` turns this off: undeclared
 names become errors.
 
 The directive works for all following files in the same compile, so we switch
@@ -305,12 +306,16 @@ assign cout = carry_mid | c1;   // carry_mid is never driven -> z -> x
 ```
 
 Why: `cary_mid` is a new implicit 1-bit wire. `carry_mid` has no driver.
-Icarus compiles it without an error.
+Icarus compiles it. With `-Wall` you get only a warning:
+
+```text
+full_adder.v:3: warning: implicit definition of wire 'cary_mid'.
+```
 
 Fix: put `` `default_nettype none `` at the top of the file. The typo becomes an error:
 
 ```text
-error: Unable to bind wire/reg/memory `cary_mid' in `full_adder'
+full_adder.v:3: error: Net cary_mid is not defined in this context.
 ```
 
 ### Mistake 3: width mismatch on a port
@@ -322,11 +327,13 @@ wire [3:0] s;
 half_adder ha0 (.a(a), .b(b), .sum(s), .carry(c));   // 4-bit signal, 1-bit port
 ```
 
-Why: Verilog connects the low bit and leaves the other bits undriven (`z`).
-Icarus prints a warning with `-Wall`, something like:
+Why: Verilog connects the low bit `s[0]` and fills the other bits with 0.
+The code compiles, but `s[3:1]` is always 0, which is probably not what you meant.
+Icarus prints a warning (even without `-Wall`):
 
 ```text
-warning: Port 3 (sum) of half_adder expects 1 bit, got 4.
+warning: Port 3 (sum) of half_adder expects 1 bits, got 4.
+       : Padding 3 high bits of the expression.
 ```
 
 Fix: connect signals of the same width, for example `.sum(s[0])`.
@@ -340,6 +347,10 @@ Wrong:
 module inv (input wire a, output reg y);
   assign y = ~a;   // error: a reg cannot be driven by assign
 endmodule
+```
+
+```text
+error: reg y; cannot be driven by primitives or continuous assignment.
 ```
 
 Fix: use `output wire y` with `assign`, or keep `reg` and use an `always` block.
@@ -373,7 +384,7 @@ module half_adder (
   assign sum = a ^ b;
 ```
 
-The error message usually points to the **next** line, which is confusing.
+Icarus reports only `syntax error` on the **next** line (the `assign`), which is confusing.
 Fix: the header always ends with `);`.
 
 ## 7. Exercises

@@ -23,39 +23,56 @@ if [ $have_verilator -eq 0 ] && [ $have_yosys -eq 0 ]; then
   exit 0
 fi
 
-check_dir() {
-  local dir="$1"
-  local files
-  files=$(ls "$dir"/*.v 2>/dev/null | grep -v '/tb_' || true)
+# check NAME FILE...  (design files only, no testbench)
+check() {
+  local name="$1"
+  shift
+  local files="$*"
   [ -z "$files" ] && return
-  [ -f "$dir/SIM_ONLY" ] && { echo "SKIP  ${dir#"$ROOT"/} (SIM_ONLY)"; return; }
 
   if [ $have_verilator -eq 1 ]; then
     # shellcheck disable=SC2086
     if ! verilator --lint-only -Wall -Wno-fatal -Wno-DECLFILENAME -Wno-MULTITOP $files; then
-      echo "ERROR verilator: ${dir#"$ROOT"/}"
+      echo "ERROR verilator: $name"
       errors=$((errors + 1))
     fi
   fi
 
   if [ $have_yosys -eq 1 ]; then
-    # shellcheck disable=SC2086
     if yosys -p "read_verilog $files; hierarchy -auto-top; synth; stat" > /tmp/yosys.log 2>&1; then
-      echo "SYNTH ${dir#"$ROOT"/}: $(grep 'Number of cells' /tmp/yosys.log | tail -n 1 | tr -s ' ')"
+      echo "SYNTH $name: $(grep 'Number of cells' /tmp/yosys.log | tail -n 1 | tr -s ' ')"
+      grep -i 'latch' /tmp/yosys.log | grep -iv 'no latch' | head -n 3 | sed 's/^/      /'
     else
-      echo "ERROR yosys: ${dir#"$ROOT"/}"
-      cat /tmp/yosys.log
+      echo "ERROR yosys: $name"
+      tail -n 20 /tmp/yosys.log
       errors=$((errors + 1))
     fi
   fi
 }
 
+design_files() {   # all .v files in a directory except testbenches
+  ls "$1"/*.v 2>/dev/null | grep -v '/tb_' | tr '\n' ' '
+}
+
 while IFS= read -r tb; do
-  check_dir "$(dirname "$tb")"
+  dir="$(dirname "$tb")"
+  name="${dir#"$ROOT"/}"
+  if [ -f "$dir/SIM_ONLY" ]; then echo "SKIP  $name (SIM_ONLY)"; continue; fi
+  check "$name" $(design_files "$dir")
 done < <(find "$ROOT/examples" -name 'tb_*.v' | sort)
 
+# Solutions: the solution files plus helper files from exercises/
+# (but not the stub that has the same name as a solution file).
 while IFS= read -r sdir; do
-  check_dir "$sdir"
+  rel="${sdir#"$ROOT"/solutions/}"
+  edir="$ROOT/exercises/$rel"
+  [ -f "$edir/SIM_ONLY" ] && { echo "SKIP  solutions/$rel (SIM_ONLY)"; continue; }
+  files="$(design_files "$sdir")"
+  for f in $(design_files "$edir"); do
+    [ -e "$sdir/$(basename "$f")" ] || files="$files $f"
+  done
+  # shellcheck disable=SC2086
+  check "solutions/$rel" $files
 done < <(find "$ROOT/solutions" -mindepth 2 -maxdepth 2 -type d | sort)
 
 echo

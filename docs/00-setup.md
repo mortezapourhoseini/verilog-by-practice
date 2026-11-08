@@ -150,7 +150,7 @@ You should see:
 ```text
 VCD info: dumpfile tb_mux2.vcd opened for output.
 PASS: tb_mux2
-tb_mux2.v:63: $finish called at 80000 (1ps)
+tb_mux2.v:59: $finish called at 80000 (1ps)
 ```
 
 The important line is `PASS: tb_mux2`. The time `80000 (1ps)` is 80 ns,
