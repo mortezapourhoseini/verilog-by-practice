@@ -40,8 +40,8 @@ check_dir() {
 
   if [ $have_yosys -eq 1 ]; then
     # shellcheck disable=SC2086
-    if yosys -q -p "read_verilog $files; hierarchy -auto-top; synth; stat" > /tmp/yosys.log 2>&1; then
-      echo "SYNTH ${dir#"$ROOT"/}: $(grep -m1 'Number of cells' /tmp/yosys.log | tr -s ' ')"
+    if yosys -p "read_verilog $files; hierarchy -auto-top; synth; stat" > /tmp/yosys.log 2>&1; then
+      echo "SYNTH ${dir#"$ROOT"/}: $(grep 'Number of cells' /tmp/yosys.log | tail -n 1 | tr -s ' ')"
     else
       echo "ERROR yosys: ${dir#"$ROOT"/}"
       cat /tmp/yosys.log

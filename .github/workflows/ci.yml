@@ -19,8 +19,11 @@ jobs:
       - name: Show tool version
         run: iverilog -V 2>&1 | head -n 1
 
-      - name: Run all tests
-        run: ./scripts/run_all.sh
+      - name: Run all examples and solutions
+        run: VERBOSE=1 ./scripts/run_all.sh
+
+      - name: Check that exercise stubs fail
+        run: ./scripts/run_all.sh stubs
 
   lint:
     name: Optional lint and synthesis (Verilator, Yosys)

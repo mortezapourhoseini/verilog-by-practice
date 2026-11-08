@@ -10,7 +10,10 @@
 #   ./scripts/run_all.sh            run everything
 #   ./scripts/run_all.sh examples   run only the examples
 #   ./scripts/run_all.sh solutions  run only the exercise solutions
+#   ./scripts/run_all.sh stubs      check that every unsolved exercise stub FAILS
+#                                   (this proves the testbenches catch wrong code)
 #
+# Set VERBOSE=1 to print the full simulation output of every test.
 # The script exits with status 1 if any test fails.
 
 set -u
@@ -19,6 +22,7 @@ ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 BUILD="$ROOT/build"
 WHAT="${1:-all}"
 TIMEOUT="${TIMEOUT:-60}"
+VERBOSE="${VERBOSE:-0}"
 
 mkdir -p "$BUILD"
 pass=0
@@ -64,6 +68,7 @@ run_test() {
 
   if [ "$status" -eq 0 ] && grep -q '^PASS' "$log" && ! grep -q '^FAIL' "$log"; then
     echo "PASS  $name"
+    [ "$VERBOSE" = "1" ] && sed 's/^/      | /' "$log"
     pass=$((pass + 1))
   else
     echo "FAIL  $name  (exit status $status)"
@@ -85,10 +90,11 @@ run_examples() {
 }
 
 # Every directory under solutions/ is one test. We compile the solution files
-# with the testbench from the matching exercises/ directory. The student stub
-# in exercises/ is NOT compiled, because the solution replaces it.
+# together with the files of the matching exercises/ directory (testbench and
+# helper modules). A file in exercises/ that has the same name as a solution
+# file is the student stub, so it is NOT compiled: the solution replaces it.
 run_solutions() {
-  local sdir rel edir
+  local sdir rel edir f files
   while IFS= read -r sdir; do
     rel="${sdir#"$ROOT"/solutions/}"
     edir="$ROOT/exercises/$rel"
@@ -98,18 +104,49 @@ run_solutions() {
       failed_list="$failed_list solutions/$rel"
       continue
     fi
-    # shellcheck disable=SC2046
-    run_test "solutions/$rel" "$edir" \
-      $(ls "$sdir"/*.v "$sdir"/*.sv 2>/dev/null) \
-      $(ls "$edir"/tb_*.v "$edir"/tb_*.sv 2>/dev/null)
+    files="$(ls "$sdir"/*.v "$sdir"/*.sv 2>/dev/null)"
+    for f in $(ls "$edir"/*.v "$edir"/*.sv 2>/dev/null); do
+      [ -e "$sdir/$(basename "$f")" ] || files="$files $f"
+    done
+    # shellcheck disable=SC2086
+    run_test "solutions/$rel" "$edir" $files
   done < <(find "$ROOT/solutions" -mindepth 2 -maxdepth 2 -type d | sort)
+}
+
+# Every exercise stub must compile, and its testbench must report FAIL.
+# A testbench that passes on the empty stub does not test anything.
+run_stubs() {
+  local edir rel base log status
+  while IFS= read -r edir; do
+    rel="${edir#"$ROOT"/}"
+    base="$BUILD/stub_$(echo "$rel" | tr '/' '_')"
+    log="$base.log"
+    # shellcheck disable=SC2046
+    if ! iverilog -g2001 -Wall -o "$base.vvp" $(ls "$edir"/*.v) > "$log" 2>&1; then
+      echo "FAIL  $rel  (stub does not compile)"
+      sed 's/^/      /' "$log"
+      fail=$((fail + 1)); failed_list="$failed_list $rel"
+      continue
+    fi
+    status=0
+    (cd "$edir" && timeout "$TIMEOUT" vvp -n "$base.vvp" < /dev/null) >> "$log" 2>&1 || status=$?
+    if [ "$status" -ne 0 ] && grep -q '^FAIL' "$log"; then
+      echo "PASS  $rel  (stub fails as expected)"
+      pass=$((pass + 1))
+    else
+      echo "FAIL  $rel  (stub should fail, but it did not)"
+      sed 's/^/      /' "$log"
+      fail=$((fail + 1)); failed_list="$failed_list $rel"
+    fi
+  done < <(find "$ROOT/exercises" -mindepth 2 -maxdepth 2 -type d | sort)
 }
 
 case "$WHAT" in
   all)       run_examples; run_solutions ;;
   examples)  run_examples ;;
   solutions) run_solutions ;;
-  *) echo "Usage: $0 [all|examples|solutions]"; exit 2 ;;
+  stubs)     run_stubs ;;
+  *) echo "Usage: $0 [all|examples|solutions|stubs]"; exit 2 ;;
 esac
 
 echo
