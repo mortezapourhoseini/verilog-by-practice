@@ -6,13 +6,4 @@ jobs:
     steps:
       - uses: actions/checkout@v5
       - run: sudo apt-get update -qq && sudo apt-get install -y -qq iverilog verilator yosys >/dev/null
-      - run: |
-          set +e
-          cd p
-          for f in *.v; do
-            echo "=========== $f"
-            iverilog -g2001 -Wall -o x.vvp $f; echo "[compile exit $?]"
-            [ -f x.vvp ] && timeout 5 vvp -n x.vvp < /dev/null; rm -f x.vvp
-            if grep -q LINT $f; then verilator --lint-only -Wall $f 2>&1 | head -20; fi
-            if grep -q SYNTH $f; then yosys -q -p "read_verilog $f; synth -top top; stat" 2>&1 | grep -iE "latch|warn|cells|error" | head -10; fi
-          done
+      - run: bash p/run.sh
