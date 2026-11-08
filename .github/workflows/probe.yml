@@ -8,6 +8,7 @@ jobs:
       - run: sudo apt-get update -qq && sudo apt-get install -y -qq iverilog verilator yosys >/dev/null
       - run: iverilog -V 2>&1 | head -1; verilator --version; yosys -V
       - run: |
+          set +e
           cd p
           for f in a b c d; do
             for g in 2001 2012; do
