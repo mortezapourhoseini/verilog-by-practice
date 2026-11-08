@@ -1,0 +1,1 @@
+module top; reg [7:0] v; integer i; initial begin v = 10; $display("[%b] [%h] [%d] [%0d]", v, v, v, v); v = 8'b0000_10x1; $display("[%b] [%h] [%d]", v, v, v); i = 16'shFF80; $display("%0d", i); end endmodule
