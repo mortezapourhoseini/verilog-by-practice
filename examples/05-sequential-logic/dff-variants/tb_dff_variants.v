@@ -35,10 +35,10 @@ module tb_dff_variants;
     input [8*48:1] what;
     begin
       if (got !== want) begin
-        $display("ERROR at %0t ns: %0s: got %b, expected %b", $time, what, got, want);
+        $display("ERROR at %0d ns: %0s: got %b, expected %b", $time, what, got, want);
         errors = errors + 1;
       end else begin
-        $display("ok    at %0t ns: %0s = %b", $time, what, got);
+        $display("ok    at %0d ns: %0s = %b", $time, what, got);
       end
     end
   endtask

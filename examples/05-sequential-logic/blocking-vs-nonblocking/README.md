@@ -22,7 +22,9 @@ cycle  6: d(sampled)= 60   non-blocking q1,q2,q3 =  60  50  40   blocking =  60 
 
 With `<=`, every register gets the **old** value of the one before it.
 With `=`, each line sees the **new** value of the line above, so the chain
-collapses. Synthesis also builds only one register for `q1`, `q2` and `q3`
-in the blocking version.
+collapses. Synthesis agrees: for the blocking version, Yosys builds only
+8 flip-flops (one 8-bit register shared by `q1`, `q2` and `q3`). For the
+non-blocking version it builds 24 (three 8-bit registers). Run `make lint`
+to see the cell counts.
 
 **Rule:** in `always @(posedge clk)`, use only `<=`.
