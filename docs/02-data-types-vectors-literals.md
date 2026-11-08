@@ -181,8 +181,8 @@ A literal is a constant number. The full form is:
 
 `5`, `'hFF` and `'b1` have no size. Verilog treats them as **at least 32 bits**.
 `5` is also signed. That is usually fine on the right side of an expression,
-but be careful with concatenations: `{a, 1}` is a 33-bit value, and Icarus
-reports an error because concatenation operands must have a size. Write `{a, 1'b1}`.
+but not inside a concatenation: `{a, 1}` is an error, because every operand of
+`{ }` must have a known size. Write `{a, 1'b1}`.
 
 ### Filling with x and z
 
@@ -281,7 +281,14 @@ The format codes of `$display` are worth knowing by heart:
 | `%s` | string | |
 | `%t` | time | |
 
-`%b` and `%h` also show `x` and `z`. `%d` shows only `x` or `z` for the whole number.
+All codes show `x` and `z`, but with different detail. For `8'b0000_10x1`:
+
+```text
+%b -> 000010x1     every bit
+%h -> 0X           capital X: only SOME bits of this hex digit are x
+%d ->   X          the whole number is unknown
+```
+
 For debugging, prefer `%b` or `%h`.
 
 ## 10. Common mistakes
@@ -296,7 +303,8 @@ always @(*) y = a & b;
 ```
 
 ```text
-error: y is not a valid l-value in tb.
+error: y is not a valid l-value in top.
+     : y is declared here as wire.
 ```
 
 Why: procedural blocks can only write variables.
@@ -308,6 +316,11 @@ Wrong:
 
 ```verilog
 assign byte_out = word[8*k+7 : 8*k];   // bounds must be constant
+```
+
+```text
+error: A reference to a wire or reg (`k') is not allowed in a constant expression.
+error: Part select expressions must be constant.
 ```
 
 Fix: use the indexed part select. The width is constant, the start may change:
@@ -322,6 +335,10 @@ Wrong:
 
 ```verilog
 assign y = {a, 0};       // 0 has no size
+```
+
+```text
+error: Concatenation operand "'sd0" has indefinite width.
 ```
 
 Fix: always give a size inside `{ }`:

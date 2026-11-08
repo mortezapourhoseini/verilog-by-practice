@@ -41,7 +41,7 @@ check() {
   if [ $have_yosys -eq 1 ]; then
     if yosys -p "read_verilog $files; hierarchy -auto-top; synth; stat" > /tmp/yosys.log 2>&1; then
       echo "SYNTH $name: $(grep 'Number of cells' /tmp/yosys.log | tail -n 1 | tr -s ' ')"
-      grep -i 'latch' /tmp/yosys.log | grep -iv 'no latch' | head -n 3 | sed 's/^/      /'
+      grep -i 'latch inferred' /tmp/yosys.log | head -n 3 | sed 's/^/      /'
     else
       echo "ERROR yosys: $name"
       tail -n 20 /tmp/yosys.log
