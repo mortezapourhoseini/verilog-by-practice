@@ -39,9 +39,11 @@ check() {
   fi
 
   if [ $have_yosys -eq 1 ]; then
-    if yosys -p "read_verilog $files; hierarchy -auto-top; synth; stat" > /tmp/yosys.log 2>&1; then
-      echo "SYNTH $name: $(grep 'Number of cells' /tmp/yosys.log | tail -n 1 | tr -s ' ')"
-      grep -i 'latch inferred' /tmp/yosys.log | head -n 3 | sed 's/^/      /'
+    # No -top: every module in the files is synthesized, so a buggy module
+    # next to a good one (as in the pitfalls examples) is checked too.
+    if yosys -p "read_verilog $files; synth; stat" > /tmp/yosys.log 2>&1; then
+      echo "SYNTH $name: $(awk '/^=== /{m=$2} /Number of cells:/{printf "%s=%s ", m, $NF}' /tmp/yosys.log)"
+      grep 'Latch inferred' /tmp/yosys.log | grep -v '^No latch' | sed 's/ from process.*//; s/^/      /'
     else
       echo "ERROR yosys: $name"
       tail -n 20 /tmp/yosys.log
