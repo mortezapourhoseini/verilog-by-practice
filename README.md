@@ -21,7 +21,9 @@ It is **not** a course for absolute beginners in digital logic.
 - Exercises with ready testbenches in `exercises/`, and solutions in `solutions/`.
 - For every common mistake: the wrong code, why it is wrong, and the fix.
 - A one-page [cheat sheet](docs/cheat-sheet.md) and a [debugging checklist](docs/14-debugging-checklist.md).
-- CI that compiles and runs every example and every solution on each push.
+- CI that compiles and runs every example and every solution on each push
+  (68 tests), and also checks that every unsolved exercise **fails** (30 checks),
+  so you know the testbenches really test something.
 
 The main text uses **Verilog-2001** only. A short
 [appendix](docs/appendix-systemverilog.md) shows the most useful SystemVerilog
@@ -66,6 +68,8 @@ From the repository root:
 make                                         # all examples and solutions
 make run DIR=examples/05-sequential-logic/counter
 make wave DIR=examples/05-sequential-logic/counter
+make stubs                                   # unsolved exercises must fail
+make lint                                    # optional: Verilator and Yosys
 make clean
 ```
 
@@ -111,6 +115,7 @@ solutions/<chapter>/<ex>/ solution *.v (uses the testbench from exercises/)
 scripts/run_all.sh       compile and run every example and solution
 scripts/run_one.sh       compile and run one directory
 scripts/lint_all.sh      optional Verilator and Yosys checks
+scripts/check_links.py   checks the links in all Markdown files
 .github/workflows/ci.yml the same tests on every push
 ```
 

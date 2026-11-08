@@ -55,6 +55,8 @@ Every testbench must:
 
 ```bash
 make            # all tests must pass
+make stubs      # every exercise stub must still fail
+make links      # no broken links in the Markdown files
 make lint       # optional, needs verilator and yosys
 ```
 

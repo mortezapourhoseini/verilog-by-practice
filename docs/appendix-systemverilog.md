@@ -60,7 +60,13 @@ state_t state, next;
 
 States get names, which also appear in waveforms of many simulators.
 `unique case` and `priority case` tell the tool (and the reader) that exactly
-one, or at least one, item must match.
+one, or at least one, item must match. The simulator warns when no item
+matches. In the example, Icarus prints such a warning at time 0, because the
+state is still `x` before the reset:
+
+```text
+WARNING: traffic_fsm.sv:41: value is unhandled for priority or unique case statement
+```
 
 ## 5. Shorter code
 

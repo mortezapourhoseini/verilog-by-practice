@@ -7,9 +7,10 @@
 #   make run DIR=<dir>    run the testbench in one directory
 #   make wave DIR=<dir>   open the waveform of that directory in GTKWave
 #   make lint             optional Verilator and Yosys checks
+#   make links            check the relative links in all Markdown files
 #   make clean            remove build outputs and waveforms
 
-.PHONY: all test examples solutions stubs run wave lint clean
+.PHONY: all test examples solutions stubs run wave lint links clean
 
 all: test
 
@@ -35,6 +36,9 @@ wave:
 
 lint:
 	@./scripts/lint_all.sh
+
+links:
+	@python3 scripts/check_links.py
 
 clean:
 	rm -rf build

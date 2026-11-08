@@ -20,4 +20,20 @@ iverilog -g2012 -Wall -o sim.vvp traffic_fsm.sv tb_traffic_fsm.sv
 vvp sim.vvp
 ```
 
+## Expected messages
+
+```text
+traffic_fsm.sv:41: vvp.tgt sorry: Case unique/unique0 qualities are ignored.
+WARNING: traffic_fsm.sv:41: value is unhandled for priority or unique case statement
+         Time: 0  Scope: tb_traffic_fsm.dut
+...
+403 cycles, side road got green 30 times
+PASS: tb_traffic_fsm
+```
+
+The warnings at time 0 are useful: before the reset, `state` is `x`, and
+`unique case` reports that no item matches. A plain `case` would stay silent.
+Icarus checks this at run time but does not use `unique` for optimization
+(the "sorry" line).
+
 See the [SystemVerilog appendix](../../../docs/appendix-systemverilog.md).

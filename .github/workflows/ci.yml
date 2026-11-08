@@ -25,6 +25,14 @@ jobs:
       - name: Check that exercise stubs fail
         run: ./scripts/run_all.sh stubs
 
+  docs:
+    name: Check links in the Markdown files
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - name: Check relative links
+        run: python3 scripts/check_links.py
+
   lint:
     name: Optional lint and synthesis (Verilator, Yosys)
     runs-on: ubuntu-latest
