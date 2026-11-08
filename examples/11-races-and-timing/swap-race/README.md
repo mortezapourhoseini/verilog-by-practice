@@ -18,7 +18,8 @@ make run DIR=examples/11-races-and-timing/swap-race
 
 ```text
 after load:      non-blocking a=11 b=22   blocking a=11 b=22
-after swap 1:    non-blocking a=22 b=11   blocking a=?? b=??   (equal)
+after swap 1:    non-blocking a=22 b=11   blocking a=22 b=22
+after swap 2:    non-blocking a=11 b=22   blocking a=22 b=22
 ```
 
 The Verilog standard does not define the order of blocks that wake up at
