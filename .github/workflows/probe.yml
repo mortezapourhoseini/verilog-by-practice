@@ -1,0 +1,21 @@
+name: probe
+on: push
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: sudo apt-get update -qq && sudo apt-get install -y -qq iverilog verilator yosys >/dev/null
+      - run: iverilog -V 2>&1 | head -1; verilator --version; yosys -V
+      - run: |
+          cd p
+          for f in a b c d; do
+            for g in 2001 2012; do
+              echo "== $f g$g"
+              if iverilog -g$g -o $f$g.vvp $f.v; then
+                timeout 5 vvp -n $f$g.vvp < /dev/null; echo "exit(-n)=$?"
+                timeout 5 vvp -N $f$g.vvp < /dev/null; echo "exit(-N)=$?"
+                timeout 5 vvp $f$g.vvp < /dev/null; echo "exit(plain)=$?"
+              else echo "compile failed"; fi
+            done
+          done
