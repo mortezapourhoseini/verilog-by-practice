@@ -16,10 +16,11 @@ make run DIR=examples/08-memories/rom-readmemh
 finds `squares.hex`. If you run `vvp` from another folder, you get:
 
 ```text
-WARNING: rom_squares.v:24: $readmemh(squares.hex): Unable to open squares.hex for reading.
+ERROR: rom_squares.v:24: $readmemh: Unable to open squares.hex for reading.
 ```
 
-and the ROM is full of `x`.
+The simulation still runs, but the ROM is full of `x`. The testbench
+checks for this at time 1 and reports it clearly.
 
 ## The hex file format
 

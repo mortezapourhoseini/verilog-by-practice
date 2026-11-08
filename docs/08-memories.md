@@ -230,11 +230,11 @@ Or print it: `$display("mem[5] = %h", dut.mem[5]);`.
 ### Mistake 1: the file is not found
 
 ```text
-WARNING: rom_squares.v:24: $readmemh(squares.hex): Unable to open squares.hex for reading.
+ERROR: rom_squares.v:24: $readmemh: Unable to open squares.hex for reading.
 ```
 
-The simulation continues, and every word is `x`. This is a warning, not an
-error, so it is easy to miss.
+Although it says `ERROR`, the simulation **continues**, and every word is `x`.
+In a long log this line is easy to miss.
 Fix: run the simulator in the folder of the file, or give a path. A testbench
 can check `dut.mem[0] !== 8'bx` at time 1, like the ROM example.
 
